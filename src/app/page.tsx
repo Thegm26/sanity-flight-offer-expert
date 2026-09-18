@@ -9,6 +9,7 @@ import { OfferCard } from "@/components/OfferCard";
 type FormState = {
   origin: string;
   destination: string;
+  tripType: "one_way" | "round_trip";
   departureDate: string;
   returnDate: string;
   adults: string;
@@ -16,9 +17,20 @@ type FormState = {
   flexibility: "lowest_price" | "balanced" | "change_flexibility";
 };
 
+const airports = [
+  { code: "CDG", city: "Paris" },
+  { code: "MAD", city: "Madrid" },
+  { code: "IST", city: "Istanbul" },
+  { code: "AMS", city: "Amsterdam" },
+  { code: "FRA", city: "Frankfurt" },
+  { code: "MUC", city: "Munich" },
+  { code: "DXB", city: "Dubai" },
+] as const;
+
 const initialForm: FormState = {
   origin: "CDG",
   destination: "IST",
+  tripType: "one_way",
   departureDate: "2026-11-12",
   returnDate: "",
   adults: "1",
@@ -69,6 +81,10 @@ export default function HomePage() {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  function setTripType(tripType: FormState["tripType"]) {
+    setForm((current) => ({ ...current, tripType, returnDate: tripType === "one_way" ? "" : current.returnDate }));
+  }
+
   function useExample() {
     setForm(initialForm);
     setError("");
@@ -84,7 +100,15 @@ export default function HomePage() {
       const response = await fetch("/api/compare", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, origin: form.origin.toUpperCase(), destination: form.destination.toUpperCase(), adults: Number(form.adults), returnDate: form.returnDate || undefined }),
+        body: JSON.stringify({
+          origin: form.origin.toUpperCase(),
+          destination: form.destination.toUpperCase(),
+          departureDate: form.departureDate,
+          adults: Number(form.adults),
+          checkedBag: form.checkedBag,
+          flexibility: form.flexibility,
+          ...(form.tripType === "round_trip" && form.returnDate ? { returnDate: form.returnDate } : {}),
+        }),
       });
       const payload: unknown = await response.json();
       if (!response.ok) {
@@ -102,26 +126,27 @@ export default function HomePage() {
   return (
     <main>
       <nav className="nav shell" aria-label="Main navigation">
-        <Link className="brand" href="/" aria-label="Flight Offer Expert home"><span className="brand-mark"><Icon name="plane" /></span><span>flight<span className="brand-accent">expert</span></span></Link>
-        <div className="nav-note"><span className="status-dot" /> Live offer comparison</div>
+        <Link className="brand" href="/" aria-label="Flight Offer Expert home"><span className="brand-mark"><Icon name="plane" /></span><span>Flight Offer Expert</span></Link>
+        <div className="nav-note">Powered by Amadeus</div>
       </nav>
 
       <section className="hero shell">
         <div className="hero-copy">
-          <p className="eyebrow"><span className="eyebrow-icon"><Icon name="spark" /></span> Better decisions, not just cheaper tickets</p>
-          <h1>Find the fare that<br /><em>fits your trip.</em></h1>
-          <p className="hero-lede">Compare live flight offers with the details that matter — baggage, flexibility, and the fine print.</p>
+          <p className="eyebrow"><span className="eyebrow-icon"><Icon name="spark" /></span> Flight offer comparison</p>
+          <h1>Find the fare that<br /><strong>fits your trip.</strong></h1>
+          <p className="hero-lede">Compare live flight offers with prices, baggage, flexibility, and fare details in one place.</p>
         </div>
 
         <div className="search-panel" id="search">
           <div className="panel-heading"><div><span className="panel-kicker">Start a comparison</span><h2>Where are you headed?</h2></div><button className="example-button" type="button" onClick={useExample}>Try an example <Icon name="arrow" /></button></div>
           <form onSubmit={submit}>
-            <div className="form-grid form-grid--route">
-              <label className="field"><span>From</span><div className="input-wrap"><Icon name="plane" /><input value={form.origin} onChange={(event) => update("origin", event.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3))} placeholder="CDG" maxLength={3} required aria-label="Origin airport code" /></div><small>Airport code</small></label>
+            <fieldset className="trip-type-fieldset"><legend>Trip type</legend><div className="segmented trip-type-segmented"><label className={form.tripType === "one_way" ? "selected" : ""}><input type="radio" name="tripType" value="one_way" checked={form.tripType === "one_way"} onChange={() => setTripType("one_way")} /> One way</label><label className={form.tripType === "round_trip" ? "selected" : ""}><input type="radio" name="tripType" value="round_trip" checked={form.tripType === "round_trip"} onChange={() => setTripType("round_trip")} /> Round trip</label></div></fieldset>
+            <div className={`form-grid form-grid--route${form.tripType === "one_way" ? " form-grid--one-way" : ""}`}>
+              <label className="field"><span>From</span><div className="input-wrap"><Icon name="plane" /><select value={form.origin} onChange={(event) => update("origin", event.target.value)} required aria-label="Origin airport"><option value="" disabled>Select airport</option>{airports.map((airport) => <option key={airport.code} value={airport.code} disabled={airport.code === form.destination}>{airport.city} ({airport.code})</option>)}</select></div></label>
               <div className="swap" aria-hidden="true">↔</div>
-              <label className="field"><span>To</span><div className="input-wrap"><Icon name="plane" /><input value={form.destination} onChange={(event) => update("destination", event.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3))} placeholder="MAD" maxLength={3} required aria-label="Destination airport code" /></div><small>Airport code</small></label>
+              <label className="field"><span>To</span><div className="input-wrap"><Icon name="plane" /><select value={form.destination} onChange={(event) => update("destination", event.target.value)} required aria-label="Destination airport"><option value="" disabled>Select airport</option>{airports.map((airport) => <option key={airport.code} value={airport.code} disabled={airport.code === form.origin}>{airport.city} ({airport.code})</option>)}</select></div></label>
               <label className="field"><span>Departure</span><input type="date" value={form.departureDate} min={minimumDate || undefined} onChange={(event) => update("departureDate", event.target.value)} required /></label>
-              <label className="field"><span>Return <b>(optional)</b></span><input type="date" value={form.returnDate} min={form.departureDate || minimumDate || undefined} onChange={(event) => update("returnDate", event.target.value)} /></label>
+              {form.tripType === "round_trip" ? <label className="field"><span>Return</span><input type="date" value={form.returnDate} min={form.departureDate || minimumDate || undefined} onChange={(event) => update("returnDate", event.target.value)} required /></label> : null}
             </div>
             <div className="form-divider" />
             <div className="form-grid form-grid--preferences">
@@ -133,8 +158,6 @@ export default function HomePage() {
           </form>
         </div>
       </section>
-
-      {!result && !error && !loading ? <section className="trust-strip shell"><div className="trust-item"><span><Icon name="shield" /></span><div><strong>Offer-level facts</strong><small>Direct from Amadeus</small></div></div><div className="trust-item"><span><Icon name="book" /></span><div><strong>Policy context</strong><small>Reviewed Sanity guidance</small></div></div><div className="trust-item"><span><Icon name="spark" /></span><div><strong>Useful tradeoffs</strong><small>Clearer than a price list</small></div></div></section> : null}
 
       <section className="results shell" aria-live="polite">
         {loading ? <div className="loading-state"><span className="loading-orbit"><Icon name="spark" /></span><h2>Reading the options…</h2><p>Checking prices, routes, and fare details for your trip.</p></div> : null}
