@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { ComparisonResponse, NormalizedOffer } from "@/lib/types";
 import { OfferCard } from "@/components/OfferCard";
 
@@ -127,12 +128,16 @@ export default function HomePage() {
     <main>
       <nav className="nav shell" aria-label="Main navigation">
         <Link className="brand" href="/" aria-label="Flight Offer Expert home"><span className="brand-mark"><Icon name="plane" /></span><span>Flight Offer Expert</span></Link>
-        <div className="nav-note">Powered by Amadeus</div>
+        <div className="nav-partners" aria-label="Powered by Amadeus APIs and Sanity">
+          <span className="partner-label">Powered by</span>
+          <span className="partner-brand partner-brand--amadeus"><Image src="/brands/amadeus.svg" width={86} height={29} alt="Amadeus" /><span className="partner-qualifier">APIs</span></span>
+          <span className="partner-separator" aria-hidden="true">+</span>
+          <span className="partner-brand partner-brand--sanity"><Image src="/brands/sanity.svg" width={72} height={15} alt="Sanity" /></span>
+        </div>
       </nav>
 
       <section className="hero shell">
         <div className="hero-copy">
-          <p className="eyebrow"><span className="eyebrow-icon"><Icon name="spark" /></span> Flight offer comparison</p>
           <h1>Find the fare that<br /><strong>fits your trip.</strong></h1>
           <p className="hero-lede">Compare live flight offers with prices, baggage, flexibility, and fare details in one place.</p>
         </div>
