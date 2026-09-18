@@ -128,9 +128,9 @@ export default function HomePage() {
     <main>
       <nav className="nav shell" aria-label="Main navigation">
         <Link className="brand" href="/" aria-label="Flight Offer Expert home"><span className="brand-mark"><Icon name="plane" /></span><span>Flight Offer Expert</span></Link>
-        <div className="nav-partners" aria-label="Powered by Amadeus APIs and Sanity">
+        <div className="nav-partners" aria-label="Powered by Amadeus and Sanity">
           <span className="partner-label">Powered by</span>
-          <span className="partner-brand partner-brand--amadeus"><Image src="/brands/amadeus.svg" width={86} height={29} alt="Amadeus" /><span className="partner-qualifier">APIs</span></span>
+          <span className="partner-brand partner-brand--amadeus"><Image src="/brands/amadeus.svg" width={86} height={29} alt="Amadeus" /></span>
           <span className="partner-separator" aria-hidden="true">+</span>
           <span className="partner-brand partner-brand--sanity"><Image src="/brands/sanity.svg" width={72} height={15} alt="Sanity" /></span>
         </div>
